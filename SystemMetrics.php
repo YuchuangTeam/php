@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * 获取windows、mac、centos的cpu使用率，内存用量、硬盘用量
+ * 获取操作系统名称和版本 例如：Windows 10 Pro、Mac OS 13.1、CentOS Stream release 8
+ */
 class SystemMetrics
 {
     public function getCpuUsage()
