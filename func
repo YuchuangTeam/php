@@ -1,0 +1,17 @@
+<?php
+
+/**
+ * 检测字符串中是否包含除英文以外的其他语言逗号
+ * @param $string
+ * @return bool
+ */
+function containsOnlyEnglishComma($string) {
+    // 使用正则表达式进行匹配
+    $pattern = '/^(?:[\p{L}\d\s\p{Han}]*,)*[\p{L}\d\s\p{Han}]*$/u';
+    // 进行匹配检查
+    if (preg_match($pattern, $string)) {
+        return true; // 字符串中只包含英文逗号
+    } else {
+        return false; // 字符串中包含其他语言逗号或没有逗号
+    }
+}
