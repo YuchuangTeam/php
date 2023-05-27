@@ -15,3 +15,108 @@ function containsOnlyEnglishComma($string) {
         return false; // 字符串中包含其他语言逗号或没有逗号
     }
 }
+
+
+/**
+ * 获取指定年份第N周的起止日期
+ * @param $year
+ * @param $week
+ * @param string $format
+ * @return array
+ */
+function getDateByWeek($year, $week, $format = 'Y-m-d')
+{
+    $newYearDate = strtotime(date("{$year}-01-01"));
+    $dateOrder = date('N', $newYearDate);
+    $leftDaysToNextMonday = $dateOrder > 1 ? (7 - $dateOrder + 1) : 0;
+    $week--;
+    $startDate = strtotime("+{$week} week", strtotime("+{$leftDaysToNextMonday} days", $newYearDate));
+    $endDate = strtotime('+6 days', $startDate);
+    return [date($format, $startDate), date($format, $endDate)];
+}
+
+
+
+/**
+ * 根据指定时间戳获取需要计算的年/周和周的起止日期
+ * @param int $time
+ * @return array
+ */
+function getCalcYearAndWeek($time = 0)
+{
+    $time = $time > 0 ? $time : time();
+    $calc_day = $time - 24 * 3600;
+    $year = date('Y', $calc_day);
+    $calcWeek = date('N', $calc_day);
+    $week = date('W', $calc_day);
+    if (intval(date('m')) == 1 && $week > 50) {
+        $year = date('Y') - 1;
+    }
+    $weekDate = getDateByWeek($year, $week);
+    return ['year' => $year, 'week' => $week, 'calcWeek' => $calcWeek, 'weekDate' => $weekDate];
+}
+
+/**
+ * 一维数组去重
+ * @param $data array 需要更新的字段
+ * @param $row array 数据库当前字段
+ * @return array
+ */
+function deduplication(array $data, array $row)
+{
+    foreach ($data as $key => $value) {
+        if (in_array($key, array_keys($row))) {
+            if ($row[$key] == $value) {
+                unset($data[$key]);
+            }
+        } else {
+            unset($data[$key]);
+        }
+    }
+    return $data;
+}
+
+/**
+ * 写入日志到文件
+ * @param $filename
+ * @param $data
+ */
+function writeLog($filename, $data)
+{
+    $path = '/path/logdir/';
+    if (!is_dir($path)) {
+        mkdir($path, 0777, true);
+    }
+    $file = $path . $filename . '.log';
+    $msg = "[" . date('Y-m-d H:i:s') . "]" . $data . PHP_EOL;
+    file_put_contents($file, $msg, FILE_APPEND);
+}
+
+/**
+ * 字符串脱敏处理（替换后的字符串长度不变）
+ * @param string $string 处理的字符串
+ * @param int $keep_front_length 字符串前面部分要保留的长度
+ * @param int $keep_back_length 字符串后面部分要保留的长度
+ * @param string $replace 需要替换成的字符串
+ * @return string
+ */
+function string_desensitization($string = '', $keep_front_length = 0, $keep_back_length = 0, $replace = "*")
+{
+    $str_length = mb_strlen($string, "utf-8");
+    //截取得到前面部分字符串
+    $keep_front = '';
+    $keep_front_length && $keep_front = mb_substr($string, 0, $keep_front_length, "utf-8");
+    //截取得到后面部分字符串
+    $keep_back = '';
+    $keep_back_length && $keep_back = mb_substr($string, -$keep_back_length, null, "utf-8");
+    //计算除截取部分剩下的字符串长度
+    $replace_length = $str_length - mb_strlen($keep_front, "utf-8") - mb_strlen($keep_back, "utf-8");
+    //替换剩下部分字符串为$replace
+    $replace_str = '';
+    for ($i = 0; $i < $replace_length; $i++) {
+        $replace_str .= $replace;
+    }
+    //返回处理完的字符串
+    return $keep_front . $replace_str . $keep_back;
+}
+
