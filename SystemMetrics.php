@@ -93,15 +93,16 @@ class SystemMetrics
                 $diskUsage[$drive] = ['usage' => $usage, 'total' => $totalSize . "G", 'free' => round($totalSize - $usedSpace, 2) . "G", 'used' => $usedSpace . "G"];
             }
         } else {
-            exec("df -h | grep '/dev/'", $diskOutput);
-            foreach ($diskOutput as $line) {
-                $line = preg_split('/\s+/', $line);
-                $drive = $line[0];
-                $totalSize = $line[1];
-                $usedSpace = $line[2];
-                $freeSpace = $line[3];
-                $usage = str_replace('%', '', $line[4]);
-                $diskUsage[$drive] = ['usage' => $usage, 'total' => $totalSize . "G", 'free' => $freeSpace . "G", 'used' => $usedSpace . "G"];
+            exec('df -h --output=source,size,used,avail,pcent', $output);
+            foreach ($output as $line) {
+                if (strpos($line, 'Filesystem') !== false || strpos($line, '/dev/') !== 0) {
+                    continue;
+                }
+                $line = preg_split('/\s+/', trim($line));
+                if (strtoupper(substr($line[1], -1)) === 'M') {
+                    continue;
+                }
+                $diskUsage[] = ['drive' => $line[0], 'usage' => str_replace('%', '', $line[4]), 'total' => $line[1], 'free' => $line[3], 'used' => $line[2]];
             }
         }
         return $diskUsage;
